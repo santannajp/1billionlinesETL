@@ -1,0 +1,58 @@
+'''O script apresentado aqui seria dentro do Databricks, mas com o objetivo de facilitar deixando tudo dentro de um repositorio de forma mais prática, resolvi colocar aqui o script'''
+
+from pyspark.sql import spark
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
+import random
+
+#lista com as 300 cidades
+cities = []
+
+#define o esquema das tabelas
+schema = StructType([
+    StructField("city", StringType(), False)
+    StructField("value", FloatType(), True)
+])
+
+#gera os dados para 1 bilhao de linhas
+rows = 10000000
+
+#define função para gerar valores aleatórios entre -99 e 99
+def generate_random_value():
+    return random.uniform(-99.0, 99.0)
+
+#cria o rdd com o s dados
+data = spark.sparkContext.parallelize(range(num_rows)) \
+    .map(lambda x: (cities[x % len(cities)], generate_random_value()))
+
+#cria o dataframe
+df = spark.CreateDataFrame(data, schema)
+
+#fazendo o show
+df.show()
+
+'''A partir daqui seria outro trecho de código no databricks'''
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType, FloatType
+from pyspark.sql.functions import col, min, max, avg
+
+#define o esquema da tabela para os resultados de agregação
+agg_schema = StructType([
+    StructField('city', StringType, False)
+    StructField('min_value', FloatType, True)
+    StructField('max_value', FloatType, True)
+    StructField('avg_value', FloatType, True)
+])
+
+#calcula os valores minimos, maximos e medios agrupados por cidades
+agg_df = df.groupby('city') \
+    .agg(min(col("value")).alias("min_value")
+         max(col("value")).alias("max_value")
+         avg(col("value")).alias("avg_value"))
+
+#mostra os resultados da agregação
+agg_df.show()
+
+#caso queria escrever o dataframe agregado em um arquivo do tipo paarquet
+
+#agg_df.write.parquet("caminho para salvar o seu arquivo/tablea_agragada.parquet")
+
